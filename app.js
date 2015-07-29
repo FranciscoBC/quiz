@@ -29,6 +29,21 @@ app.use(session());
 app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// auto-logout
+app.use(function(req, res, next) {
+    if (req.session.user) {
+        if (Date.now() - req.session.user.lastRequestTime < 120000) {
+            req.session.user.lastRequestTime = Date.now();
+        }
+        else {
+            delete req.session.user;
+            req.session.errors = [{"message": 'Excedido su tiempo de sesion'}];
+            return res.redirect("/login");
+        }
+    } 
+    next();
+});
+
 // Helpers dinamicos:
 app.use(function(req, res, next){
     // guardar path en session.redir para despues de login
